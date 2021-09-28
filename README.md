@@ -120,7 +120,7 @@ docker events
 ```shell
 docker logout
 open https://hub.docker.com/settings/security # to make Access Token
-docker login -u {{ registry-account }} -p {{ access-token }} # login default hub.docker.com registry
+docker login -u olegvrn -p {{ access-token }} # login default hub.docker.com registry
 ```
 
 - Сценарий "Как скачать образ в локальную репу?"
@@ -247,13 +247,13 @@ Hands-on practice quest #01: pre-built disk image lifecycle (15+5)
 docker image ls # TODO: собственные пометки участников для будущего использования в проектах
 ```
 
-- Сценарий "Как ...?"
+- Сценарий "Как посмотреть список образов?"
 ```shell
 docker image pull alpine
 docker image ls
 ```
 
-- Сценарий "Как ...?"
+- Сценарий "Как просмотр метадаты образа?"
 ```shell
 docker image history alpine
 
@@ -261,36 +261,36 @@ docker image inspect alpine
 docker image inspect --format='{{.Id}} -> {{.Parent}}' alpine
 ```
 
-- Сценарий "Как ...?"
+- Сценарий "Как создать новый образ из контейнера?"
 ```shell
 docker container run --name demo -it alpine
 /# touch side-effect.txt
 /# exit
 docker container diff demo
-docker container commit demo {{ registry-account }}/demo
+docker container commit demo olegvrn/demo
 docker image ls
 ```
 
-- Сценарий "Как ...?"
+- Сценарий "Как создать тэг?"
 ```shell
-docker image tag {{ registry-account }}/demo:latest {{ registry-account }}/demo:1.0.0
+docker image tag olegvrn/demo:latest olegvrn/demo:1.0.0
 docker image ls
 ```
 
-- Сценарий "Как ...?"
+- Сценарий "Как опубликовать репозиторий?"
 ```shell
-docker image push {{ registry-account }}/demo:1.0.0
+docker image push olegvrn/demo:1.0.0
 ```
 
-- Сценарий "Как ...?"
+- Сценарий "Как удалить образы и очистить мето на диске?"
 ```shell
 docker image ls
 docker container rm demo
 docker image prune
 docker image ls
-docker image rm {{ registry-account }}/demo:1.0.0
+docker image rm olegvrn/demo:1.0.0
 docker image ls
-docker image rm {{ registry-account }}/demo:latest
+docker image rm olegvrn/demo:latest
 docker image ls
 docker image prune --all
 ```
@@ -543,8 +543,8 @@ cat backend/Dockerfile # check it for reference of new base/Dockerfile
 mkdir base
 nano base/Dockerfile #TODO describe image that based on CentOS fixed fresh available version and install java-1.8.0-openjdk-headless with `yum install -y`
 
-docker image build --tag {{ registry-account }}/base:1.0.0 ./base # where Dockerfile located
-docker image push {{ registry-account }}/base:1.0.0
+docker image build --tag olegvrn/base:1.0.0 ./base # where Dockerfile located
+docker image push olegvrn/base:1.0.0
 ```
 
 Hands-on practice quest #03-2: _simple_ application containerization (15+5)
@@ -570,7 +570,7 @@ cat Dockerfile # check out application's default configuration
 - Сценарий "Как собрать свой образ с приложением на базе Dockerfile?"
 ```shell
 cd application
-docker image build --tag {{ registry-account }}/backend:1.0.0 ./backend
+docker image build --tag olegvrn/backend:1.0.0 ./backend
 ```
 
 - Сценарий "Как сохранить образ в репозитории?"
@@ -588,7 +588,7 @@ docker container run \
  --publish 8080:8080 \ # [host address:]8080:8080
  --env SPRING_PROFILES_ACTIVE=qa \ # в контейнере действует переменная окружения
  --volume $(pwd)/log:/dbo/log \ # папка в конейнере /dbo/log отображена на папку на хосте /current-path/log
- {{ registry-account }}/backend:1.0.0 \ #  репозиторий и тег
+ olegvrn/backend:1.0.0 \ #  репозиторий и тег
  --spring.profiles.active=qa # параметры командной строки
 
 curl localhost:8080/dbo/actuator/health
@@ -627,11 +627,11 @@ Hands-on practice quest #04: _multi-component_ application containerization (25+
 ```shell
 cd application/backend
 nano Dockerfile # TODO fix active Spring profile to `preprod` instead of `qa`
-docker image build --tag {{ registry-account }}/backend:1.0.0 ./backend
+docker image build --tag olegvrn/backend:1.0.0 ./backend
 
 cd application/stub
 nano Dockerfile # TODO fix FROM for new custom base image
-docker image build --tag {{ registry-account }}/stub:1.0.0 ./stub
+docker image build --tag olegvrn/stub:1.0.0 ./stub
 ```
 
 - Сценарий "Как ...?"
@@ -652,7 +652,7 @@ docker container run \
  --detach \
  --name stub \
  --publish 8888:8888 \
- {{ registry-account }}/stub:1.0.0
+ olegvrn/stub:1.0.0
 curl localhost:8888/api/account [| jq]
 
 docker container run \
@@ -664,7 +664,7 @@ docker container run \
  --env SPRING_DATASOURCE_USERNAME=dbo \
  --env SPRING_DATASOURCE_PASSWORD=dbo \
  --env SPRING_INTEGRATION_LEGACYACCOUNTINGSYSTEM_BASEURL="http://$(hostname -i):8888/api" \
- {{ registry-account }}/backend:1.0.0
+ olegvrn/backend:1.0.0
 curl -H "X-API-VERSION:1" localhost:8080/dbo/actuator/health [| jq]
 curl -H "X-API-VERSION:1" localhost:8080/dbo/api/account [| jq]
 ```
@@ -785,7 +785,7 @@ docker container run \
  --detach \
  --network my_deployment \
  --name stub \
- {{ registry-account }}/stub:1.0.0
+ olegvrn/stub:1.0.0
  
 docker container run \
  --detach \
@@ -796,21 +796,21 @@ docker container run \
  --env SPRING_DATASOURCE_USERNAME=dbo \
  --env SPRING_DATASOURCE_PASSWORD=dbo \
  --env SPRING_INTEGRATION_LEGACYACCOUNTINGSYSTEM_BASEURL="http://stub:8888/api" \ # hostname instead of external ip is the result of virtualizing network
- {{ registry-account }}/backend:1.0.0
+ olegvrn/backend:1.0.0
 ```
 
 ```shell
 cd application
 nano proxy/nginx.conf #TODOs
 
-docker image build --tag {{ registry-account }}/proxy:1.0.0 ./proxy
+docker image build --tag olegvrn/proxy:1.0.0 ./proxy
 
 docker container run \
  --detach \
  --network my_deployment \
  --name proxy \
  --publish 80:80 \
- {{ registry-account }}/proxy:1.0.0
+ olegvrn/proxy:1.0.0
 ```
 
 - Сценарий "Как подключить контейнер к виртуальным сетям?"
